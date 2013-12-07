@@ -4,23 +4,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-
-//import java.util.ArrayList;
-//import java.util.List;
-//
-//import org.sapia.corus.interop.ConfirmShutdown;
-//import org.sapia.corus.interop.Poll;
-//import org.sapia.corus.interop.Process;
-//import org.sapia.corus.interop.Restart;
-//import org.sapia.corus.interop.Status;
+import org.sapia.corus.interop.InteropCodec;
+import org.sapia.corus.interop.client.InteropProtocol;
 
 /**
- * Use an instance of this class to simulate client-server SOAP interaction.
- * This class implements <code>InteropProtocol</code> insterface and allows
- * to pass in a <code>RequestListener</code> that simulates the server.
+ * Use an instance of this class to simulate client-server interaction.
+ * This class implements the {@link InteropProtocol} insterface and allows
+ * passing in a {@link RequestListener} that simulates the server.
  * <p>
- * To perform tests, implement your own <code>RequestListener</code>, and use
- * the client methods (from the <code>InteropProtocol</code> interface) to send
+ * To perform tests, implement your own {@link RequestListener}, and use
+ * the client methods (from the {@link InteropProtocol} interface) to send
  * requests to the "server".
  * <p>
  * <pre>
@@ -33,20 +26,14 @@ import java.io.OutputStream;
  * </pre>
  *
  * @author Yanick Duchesne
- *
- * <dl>
- * <dt><b>Copyright:</b><dd>Copyright &#169; 2002-2003 <a href="http://www.sapia-oss.org">Sapia Open Source Software</a>. All Rights Reserved.</dd></dt>
- * <dt><b>License:</b><dd>Read the license.txt file of the jar or visit the
- *        <a href="http://www.sapia-oss.org/license.html">license page</a> at the Sapia OSS web site</dd></dt>
- * </dl>
  */
 public class MockClientServer extends MockProtocol implements MockStreamListener {
-  ServerStatelessSoapStreamHelper _server;
+  ServerStatelessStreamHelper _server;
 
-  public MockClientServer(RequestListener listener) {
-    super("testCorusPid", null);
+  public MockClientServer(InteropCodec codec, RequestListener listener) {
+    super(codec, "testCorusPid", null);
     super._listener = this;
-    _server         = new ServerStatelessSoapStreamHelper(listener, "mockServer");
+    _server         = new ServerStatelessStreamHelper(codec, listener, "mockServer");
   }
 
   public void onRequest(InputStream req, OutputStream res)
@@ -54,7 +41,6 @@ public class MockClientServer extends MockProtocol implements MockStreamListener
     try {
       _server.processRequest(req, res);
     } catch (Exception e) {
-      e.printStackTrace();
       throw new IOException(e.getMessage());
     }
   }

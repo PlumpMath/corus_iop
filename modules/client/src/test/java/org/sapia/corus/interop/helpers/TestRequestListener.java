@@ -1,48 +1,44 @@
 package org.sapia.corus.interop.helpers;
 
-import org.sapia.corus.interop.ConfirmShutdown;
-import org.sapia.corus.interop.Poll;
-import org.sapia.corus.interop.Process;
-import org.sapia.corus.interop.Restart;
-import org.sapia.corus.interop.Status;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.sapia.corus.interop.api.message.ConfirmShutdownMessageCommand;
+import org.sapia.corus.interop.api.message.MessageCommand;
+import org.sapia.corus.interop.api.message.PollMessageCommand;
+import org.sapia.corus.interop.api.message.ProcessMessageHeader;
+import org.sapia.corus.interop.api.message.RestartMessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
+
 
 /**
- * @author Yanick Duchesne
- *
- * <dl>
- * <dt><b>Copyright:</b><dd>Copyright &#169; 2002-2003 <a href="http://www.sapia-oss.org">Sapia Open Source Software</a>. All Rights Reserved.</dd></dt>
- * <dt><b>License:</b><dd>Read the license.txt file of the jar or visit the
- *        <a href="http://www.sapia-oss.org/license.html">license page</a> at the Sapia OSS web site</dd></dt>
- * </dl>
+ * @author yduchesne
  */
 public class TestRequestListener implements RequestListener {
-  boolean confirm;
+  boolean confirmShutdown;
+  boolean confirmDump;
   boolean poll;
   boolean restart;
   boolean status;
 
-  public void onConfirmShutdown(Process proc, ConfirmShutdown confirm)
-                         throws Exception {
-    this.confirm = true;
+  public void onConfirmShutdown(ProcessMessageHeader proc, ConfirmShutdownMessageCommand confirm) throws Exception {
+    confirmShutdown = true;
   }
 
-  public List onPoll(Process proc, Poll poll) throws Exception {
+  public List<MessageCommand> onPoll(ProcessMessageHeader proc, PollMessageCommand poll) throws Exception {
     this.poll = true;
 
-    return new ArrayList();
+    return new ArrayList<MessageCommand>();
   }
 
-  public void onRestart(Process proc, Restart res) throws Exception {
+  public void onRestart(ProcessMessageHeader proc, RestartMessageCommand res) throws Exception {
     this.restart = true;
   }
 
-  public List onStatus(Process proc, Status stat) throws Exception {
+  public List<MessageCommand> onStatus(ProcessMessageHeader proc, StatusMessageCommand stat) throws Exception {
     this.status = true;
 
-    return new ArrayList();
+    return new ArrayList<MessageCommand>();
   }
+
 }

@@ -1,9 +1,9 @@
 package org.sapia.corus.interop.client;
 
-import org.sapia.corus.interop.Param;
-import org.sapia.corus.interop.Status;
-import org.sapia.corus.interop.Context;
 import org.sapia.corus.interop.api.StatusRequestListener;
+import org.sapia.corus.interop.api.message.ContextMessagePart;
+import org.sapia.corus.interop.api.message.InteropMessageBuilderFactory;
+import org.sapia.corus.interop.api.message.StatusMessageCommand.Builder;
 
 
 /**
@@ -18,11 +18,10 @@ import org.sapia.corus.interop.api.StatusRequestListener;
 public class TestStatusListener implements StatusRequestListener {
   boolean called;
 
-  public void onStatus(Status status) {
-    Context t = new Context();
-    t.setName("TestContext");
-    t.addParam(new Param("testName", "testValue"));
-    status.addContext(t);
+  @Override
+  public void onStatus(Builder statusBuilder, InteropMessageBuilderFactory factory) {
+    ContextMessagePart c = factory.newContextBuilder().name("TestContext").param("testName", "testValue").build();
+    statusBuilder.context(c);
     called = true;
   }
 }

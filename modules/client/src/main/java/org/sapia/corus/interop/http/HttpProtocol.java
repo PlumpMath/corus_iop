@@ -1,18 +1,21 @@
 package org.sapia.corus.interop.http;
 
-import org.sapia.corus.interop.Status;
-import org.sapia.corus.interop.client.InteropClient;
-import org.sapia.corus.interop.helpers.ClientStatelessSoapStreamHelper;
-import org.sapia.corus.interop.helpers.StreamConnection;
-import org.sapia.corus.interop.soap.FaultException;
-
 import java.io.IOException;
-
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import org.sapia.corus.interop.InteropCodec;
+import org.sapia.corus.interop.InteropCodecFactory;
+import org.sapia.corus.interop.api.message.MessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
+import org.sapia.corus.interop.client.FaultException;
+import org.sapia.corus.interop.client.InteropClient;
+import org.sapia.corus.interop.helpers.ClientStatelessStreamHelper;
+import org.sapia.corus.interop.helpers.StreamConnection;
+
 
 
 /**
@@ -27,23 +30,33 @@ import java.util.List;
  * <p>
  * A corus server is expected to be available at:
  * <p>
- * <code>http://<corus.server.host>:<corus.server.port>/interop/soap</code>
+ * <code>http://<corus.server.host>:<corus.server.port>/interop/&lt;wire_format_name&gt;</code>
+ *  
+ * @see InteropCodec#getWireFormatName()
  *
- * @author Yanick Duchesne
- * @author <a href="mailto:jc@sapia-oss.org">Jean-Cedric Desrochers</a>
- *
- * <dl>
- * <dt><b>Copyright:</b><dd>Copyright &#169; 2002-2003 <a href="http://www.sapia-oss.org">Sapia Open Source Software</a>. All Rights Reserved.</dd></dt>
- * <dt><b>License:</b><dd>Read the license.txt file of the jar or visit the
- *        <a href="http://www.sapia-oss.org/license.html">license page</a> at the Sapia OSS web site</dd></dt>
- * </dl>
+ * @author yduchesne
+ * @author jcdesrochers
  */
-public class HttpProtocol extends ClientStatelessSoapStreamHelper {
-  private static final List EMPTY_LST  = new ArrayList();
-  private URL               _corusUrl;
+public class HttpProtocol extends ClientStatelessStreamHelper {
+  private static final List<MessageCommand> EMPTY_LST  = Collections.unmodifiableList(new ArrayList<MessageCommand>(0));
+  private URL _corusUrl;
 
+  /**
+   * Internally calls the {@link #HttpProtocol(InteropCodec)} constructor, selecting the proper {@link InteropCodec}
+   * instance through the {@link InteropCodecFactory#getBySystemProperty()} method.
+   * 
+   * @throws MalformedURLException if a connection to Corus could not be made due to an invalid URL.
+   */
   public HttpProtocol() throws MalformedURLException {
-    super(InteropClient.getInstance().getCorusPid());
+    this(InteropCodecFactory.getBySystemProperty());
+  }
+  
+  /**
+   * @param codec the {@link InteropCodec} to use.
+   * @throws MalformedURLException if a connection to Corus could not be made due to an invalid URL.
+   */
+  public HttpProtocol(InteropCodec codec) throws MalformedURLException {
+    super(codec, InteropClient.getInstance().getCorusPid());
 
     if (InteropClient.getInstance().isDynamic()) {
       int    port = InteropClient.getInstance().getCorusPort();
@@ -55,11 +68,11 @@ public class HttpProtocol extends ClientStatelessSoapStreamHelper {
         throw new IllegalStateException("corus.server.host system property not specified");
       }
 
-      _corusUrl = new URL("http://" + host + ":" + port + "/interop/soap");
+      _corusUrl = new URL("http://" + host + ":" + port + "/interop/" + codec.getWireFormat().type());
       _log.warn("HTTP protocol activated; corus server endpoint set to:  " +
                 _corusUrl.toString());
     } else {
-      _log.warn("VM was not started dynamically; HTTP protocol will be disabled");
+      _log.warn("JVM was not started dynamically; HTTP protocol will be disabled");
     }
   }
 
@@ -77,7 +90,7 @@ public class HttpProtocol extends ClientStatelessSoapStreamHelper {
   /**
    * @see org.sapia.corus.interop.client.InteropProtocol#poll()
    */
-  public List poll() throws FaultException, IOException {
+  public List<MessageCommand> poll() throws FaultException, IOException {
     if (_corusUrl == null) {
       return EMPTY_LST;
     }
@@ -96,10 +109,8 @@ public class HttpProtocol extends ClientStatelessSoapStreamHelper {
     super.doSendRestart();
   }
 
-  /**
-   * @see org.sapia.corus.interop.client.InteropProtocol#sendStatus(Status)
-   */
-  public List sendStatus(Status stat) throws FaultException, IOException {
+  @Override
+  public List<MessageCommand> sendStatus(StatusMessageCommand stat) throws FaultException, IOException {
     if (_corusUrl == null) {
       return EMPTY_LST;
     }
@@ -107,10 +118,8 @@ public class HttpProtocol extends ClientStatelessSoapStreamHelper {
     return super.doSendStatus(stat, false);
   }
 
-  /**
-   * @see org.sapia.corus.interop.client.InteropProtocol#pollAndSendStatus(Status)
-   */
-  public List pollAndSendStatus(Status stat) throws FaultException, IOException {
+  @Override
+  public List<MessageCommand> pollAndSendStatus(StatusMessageCommand stat) throws FaultException, IOException {
     if (_corusUrl == null) {
       return EMPTY_LST;
     }
@@ -119,11 +128,11 @@ public class HttpProtocol extends ClientStatelessSoapStreamHelper {
   }
   
   /**
-   * @see ClientStatelessSoapStreamHelper#newStreamConnection()
+   * @see ClientStatelessStreamHelper#newStreamConnection()
    */
   protected StreamConnection newStreamConnection() throws IOException {
     if (_corusUrl == null) {
-      throw new IOException("corus server URL not specified; VM was probably not started dynamically");
+      throw new IOException("corus server URL not specified; JVM was probably not started dynamically");
     }
 
     return new HttpURLStreamConnection(_corusUrl);

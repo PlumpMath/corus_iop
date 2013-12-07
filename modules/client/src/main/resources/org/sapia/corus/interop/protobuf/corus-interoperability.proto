@@ -1,0 +1,165 @@
+package org.sapia.corus.interop.protobuf;
+
+message Header {
+    extensions 401 to 499;
+    
+    enum HeaderType {
+        PROCESS = 1;
+        SERVER  = 2;
+    }
+    
+    required HeaderType type = 1;
+}
+
+message Process {
+    extend Header {
+        optional Process header = 401;
+    }
+    
+    required string request_id = 1;
+    required string corus_pid  = 2;
+}
+
+message Server {
+    extend Header {
+        optional Server header = 402;
+    }
+    
+    required string request_id      = 1;
+    required int64  processing_time = 2;
+}
+
+
+
+message Param {
+    required string name  = 1;
+    required string value = 2;
+}
+
+message Command {
+    extensions 501 to 599;
+
+    enum CommandType {
+        POLL                = 1;
+        STATUS              = 2;
+        RESTART             = 3;
+        CONFIRM_SHUTDOWN    = 4;
+        ACK                 = 5;
+        SHUTDOWN            = 6;
+        PROCESS_EVENT       = 7;
+        CONFIGURATION_EVENT = 8;
+    }
+    
+    required CommandType type = 1;
+}
+
+message Poll {
+    extend Command {
+        optional Poll command = 501;
+    }
+    
+    required string command_id = 1;
+}
+
+message Status {
+    extend Command {
+        optional Status command = 502;
+    }
+    
+    message Context {
+        required string name   = 1;
+        repeated Param  params = 2;
+    }
+    
+    required string  command_id = 1;
+    repeated Context contexts   = 2;
+}
+
+message Restart {
+    extend Command {
+        optional Restart command = 503;
+    }
+    
+    required string command_id = 1;
+}
+
+message ConfirmShutdown {
+    extend Command {
+        optional ConfirmShutdown command = 504;
+    }
+    
+    required string command_id = 1;
+}
+
+message Ack {
+    extend Command {
+        optional Ack command = 505;
+    }
+    
+    required string command_id = 1;
+}
+
+message Shutdown {
+    extend Command {
+        optional Shutdown command = 506;
+    }
+    
+    enum RequestorActor {
+        SERVER  = 1;
+        PROCESS = 2;
+        ADMIN   = 3;
+    }
+    
+    required string         command_id = 1;
+    required RequestorActor requestor  = 2;
+}
+
+message ProcessEvent {
+    extend Command {
+        optional ProcessEvent command = 507;
+    }
+
+    required string command_id = 1;
+    required string event_type = 2;
+    repeated Param  params     = 3;
+}
+
+message ConfigurationEvent {
+    extend Command {
+        optional ConfigurationEvent command = 508;
+    }
+    
+    required string command_id = 1;
+    required string event_type = 2;
+    repeated Param  params     = 3;
+}
+
+
+// A fault provides information (code, description, ...) about an error in the message exchange.
+message Fault {
+    // The error code of the fault
+    required string error_code = 1;
+
+    // A textual description of the actor that is responsible of the fault
+    required string source_actor = 2;
+
+    // The error message of the fault
+    required string error_message = 3;
+
+    // A detailed description of the fault
+    optional string error_details = 4;
+
+}
+
+// High level message exchanged between a process and the corus server.
+message Message {
+
+    // The required header of this message
+    required Header header = 1;
+    
+    // The commands that are part of this message
+    repeated Command commands = 2;
+
+    // When reporting an error, contains the details of the error
+    optional Fault error = 3;
+} 

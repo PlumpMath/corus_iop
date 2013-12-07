@@ -1,6 +1,8 @@
 package org.sapia.corus.interop.api;
 
-import org.sapia.corus.interop.Status;
+import org.sapia.corus.interop.api.message.ContextMessagePart;
+import org.sapia.corus.interop.api.message.InteropMessageBuilderFactory;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
 
 
 /**
@@ -18,11 +20,12 @@ import org.sapia.corus.interop.Status;
 public interface StatusRequestListener {
   /**
    * This method is a callback that allows applications to publish
-   * status information to their corus server. Applications add
-   * information to the status using the <code>addContext()</code>
-   * method.
+   * status information to their Corus server. Applications add
+   * information to the given builder.
    *
-   * @param status a <code>Status</code> instance.
+   * @param statusBuilder a {@link StatusMessageCommand.Builder} instance.
+   * @param factory the {@link InteropMessageBuilderFactory} to use for building the {@link ContextMessagePart}s
+   * to add to the status builder.
    */
-  public void onStatus(Status status);
+  public void onStatus(StatusMessageCommand.Builder statusBuilder, InteropMessageBuilderFactory factory);
 }

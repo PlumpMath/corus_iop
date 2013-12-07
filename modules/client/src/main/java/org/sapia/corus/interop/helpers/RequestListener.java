@@ -1,75 +1,69 @@
 package org.sapia.corus.interop.helpers;
 
-import org.sapia.corus.interop.ConfirmShutdown;
-import org.sapia.corus.interop.Poll;
-import org.sapia.corus.interop.Restart;
-import org.sapia.corus.interop.Status;
-
 import java.util.List;
+
+import org.sapia.corus.interop.api.message.ConfirmShutdownMessageCommand;
+import org.sapia.corus.interop.api.message.MessageCommand;
+import org.sapia.corus.interop.api.message.PollMessageCommand;
+import org.sapia.corus.interop.api.message.ProcessMessageHeader;
+import org.sapia.corus.interop.api.message.RestartMessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
+import org.sapia.corus.interop.protobuf.CorusInteroperability.Status;
 
 
 /**
  * This insterface can conveniently implemented by servers that handle
- * Corus's interoperability protocol. The interface specifies callbacks that
+ * Corus's Interoperability Protocol. The interface specifies callbacks that
  * are called for each possible request that can be send by Corus clients.
  *
- * @see org.sapia.corus.interop.helpers.ServerStatelessSoapStreamHelper
+ * @see ServerStatelessStreamHelper
  *
- * @author Yanick Duchesne
- *
- * <dl>
- * <dt><b>Copyright:</b><dd>Copyright &#169; 2002-2003 <a href="http://www.sapia-oss.org">Sapia Open Source Software</a>. All Rights Reserved.</dd></dt>
- * <dt><b>License:</b><dd>Read the license.txt file of the jar or visit the
- *        <a href="http://www.sapia-oss.org/license.html">license page</a> at the Sapia OSS web site</dd></dt>
- * </dl>
+ * @author yduchesne
  */
 public interface RequestListener {
+  
   /**
    * Called when a dynamic process confirms that it has proceeded to its own shutdown.
    *
-   * @param proc a <code>Process</code> object, encapsulating the corus process ID of the request's originator, and
+   * @param proc a {@link ProcessMessageHeader} object, encapsulating the corus process ID of the request's originator, and
    * a request identifier.
-   * @param confirm a <code>ConfirmShutdown</code> command instance.
+   * @param confirm a {@link ConfirmShutdownMessageCommand} instance.
    * @throws Exception if an error occurs when processing the given command.
    */
-  public void onConfirmShutdown(org.sapia.corus.interop.Process proc,
-                                ConfirmShutdown confirm)
-                         throws Exception;
+  public void onConfirmShutdown(ProcessMessageHeader proc, ConfirmShutdownMessageCommand confirm) throws Exception;
 
   /**
    * Called when a dynamic process notifies its corus server about its status.
    *
-   * @param proc a <code>Process</code> object, encapsulating the corus process ID of the request's originator, and
+   * @param proc a {@link ProcessMessageHeader} object, encapsulating the corus process ID of the request's originator, and
    * a request identifier.
-   * @param stat a <code>Status</code> command instance.
+   * @param stat a {@link Status} instance.
    * @throws Exception if an error occurs when processing the given command.
-   * @return the <code>List</code> of commands that were pending in the process queue, within the
-   * corus server.
+   * @return the {@link List} of commands that were pending in the process queue, within the
+   * Corus server.
    */
-  public List onStatus(org.sapia.corus.interop.Process proc, Status stat)
-                throws Exception;
+  public List<MessageCommand> onStatus(ProcessMessageHeader proc, StatusMessageCommand stat) throws Exception;
 
   /**
    * Called when a dynamic process polls its corus server.
    *
-   * @param proc a <code>Process</code> object, encapsulating the corus process ID of the request's originator, and
+   * @param proc a {@link ProcessMessageHeader} object, encapsulating the corus process ID of the request's originator, and
    * a request identifier.
-   * @param poll a <code>Poll</code> command instance.
+   * @param poll a {@link PollMessageCommand} instance.
    * @throws Exception if an error occurs when processing the given command.
-   * @return the <code>List</code> of commands that were pending in the process queue, within the
-   * corus server.
+   * @return the {@link List} of commands that were pending in the process queue, within the
+   * Corus server.
    */
-  public List onPoll(org.sapia.corus.interop.Process proc, Poll poll)
-              throws Exception;
+  public List<MessageCommand> onPoll(ProcessMessageHeader proc, PollMessageCommand poll) throws Exception;
 
   /**
    * Called when a dynamic process notifies its corus server that it wishes to be restarted.
    *
-   * @param proc a <code>Process</code> object, encapsulating the corus process ID of the request's originator, and
+   * @param proc a {@link ProcessMessageHeader} object, encapsulating the corus process ID of the request's originator, and
    * a request identifier.
-   * @param res a <code>Restart</code> command instance.
+   * @param res a {@link RestartMessageCommand} instance.
    * @throws Exception if an error occurs when processing the given command.
    */
-  public void onRestart(org.sapia.corus.interop.Process proc, Restart res)
-                 throws Exception;
+  public void onRestart(ProcessMessageHeader proc, RestartMessageCommand res) throws Exception;
+  
 }

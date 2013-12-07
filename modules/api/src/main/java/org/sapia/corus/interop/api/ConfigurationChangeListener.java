@@ -1,6 +1,6 @@
 package org.sapia.corus.interop.api;
 
-import org.sapia.corus.interop.ConfigurationEvent;
+import org.sapia.corus.interop.api.message.ConfigurationEventMessageCommand;
 
 /**
  * An instance of this interface is notified upon new process configuration change (add, update or removal).
@@ -14,8 +14,8 @@ public interface ConfigurationChangeListener {
    * Implementations should avoid blocking in this method, and should therefore delegate
    * any time-consuming logic to a separate thread.
    * 
-   * @param event a {@link ConfigurationEvent}.
+   * @param event a {@link ConfigurationEventSoapMessage}.
    */
-  public void onConfigurationChange(ConfigurationEvent event);
+  public void onConfigurationChange(ConfigurationEventMessageCommand event);
 
 }

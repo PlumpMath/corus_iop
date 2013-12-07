@@ -1,31 +1,30 @@
 package org.sapia.corus.interop.helpers;
 
-import org.sapia.corus.interop.Status;
-import org.sapia.corus.interop.soap.FaultException;
-
 import java.io.IOException;
-
 import java.util.List;
+
+import org.sapia.corus.interop.InteropCodec;
+import org.sapia.corus.interop.api.message.MessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
+import org.sapia.corus.interop.client.FaultException;
+import org.sapia.corus.interop.client.InteropProtocol;
 
 
 /**
+ * Implements the {@link InteropProtocol} interface, by extending the {@link ClientStatelessStreamHelper} class.
+ * 
  * @author Yanick Duchesne
- *
- * <dl>
- * <dt><b>Copyright:</b><dd>Copyright &#169; 2002-2003 <a href="http://www.sapia-oss.org">Sapia Open Source Software</a>. All Rights Reserved.</dd></dt>
- * <dt><b>License:</b><dd>Read the license.txt file of the jar or visit the
- *        <a href="http://www.sapia-oss.org/license.html">license page</a> at the Sapia OSS web site</dd></dt>
- * </dl>
  */
-class MockProtocol extends ClientStatelessSoapStreamHelper {
+class MockProtocol extends ClientStatelessStreamHelper {
+  
   protected MockStreamListener _listener;
 
-  protected MockProtocol(String corusPid, MockStreamListener listener) {
-    super(corusPid);
+  protected MockProtocol(InteropCodec codec, String corusPid, MockStreamListener listener) {
+    super(codec, corusPid);
     _listener = listener;
   }
-
-  protected StreamConnection newStreamConnection() throws IOException {
+  
+    protected StreamConnection newStreamConnection() throws IOException {
     return new MockStreamConnection(_listener);
   }
 
@@ -33,7 +32,7 @@ class MockProtocol extends ClientStatelessSoapStreamHelper {
     super.doSendConfirmShutdown();
   }
 
-  public List poll() throws FaultException, IOException {
+  public List<MessageCommand> poll() throws FaultException, IOException {
     return super.doSendPoll();
   }
 
@@ -41,11 +40,12 @@ class MockProtocol extends ClientStatelessSoapStreamHelper {
     super.doSendRestart();
   }
 
-  public List sendStatus(Status stat) throws FaultException, IOException {
+  public List<MessageCommand> sendStatus(StatusMessageCommand stat) throws FaultException, IOException {
     return super.doSendStatus(stat, false);
   }
 
-  public List pollAndSendStatus(Status stat) throws FaultException, IOException {
+  public List<MessageCommand> pollAndSendStatus(StatusMessageCommand stat) throws FaultException, IOException {
     return super.doSendStatus(stat, true);
   }
+
 }

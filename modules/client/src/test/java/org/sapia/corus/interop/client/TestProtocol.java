@@ -1,11 +1,14 @@
 package org.sapia.corus.interop.client;
 
-import org.sapia.corus.interop.*;
-import org.sapia.corus.interop.soap.FaultException;
-
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.*;
+import org.sapia.corus.interop.api.message.InteropMessageBuilderFactory;
+import org.sapia.corus.interop.api.message.MessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
+import org.sapia.corus.interop.soap.message.Ack;
+import org.sapia.corus.interop.soap.message.SoapInteropMessageBuilderFactory;
 
 
 /**
@@ -24,13 +27,19 @@ public class TestProtocol implements InteropProtocol {
   int     pollCount;
   int     statCount;
   boolean restart;
-  boolean confirm;
-
-  public void confirmShutdown() throws FaultException, IOException {
-    confirm = true;
+  boolean confirmShutdown;
+  boolean confirmDump;
+  
+  @Override
+  public InteropMessageBuilderFactory getMessageBuilderFactory() {
+    return new SoapInteropMessageBuilderFactory();
   }
 
-  public List poll() throws FaultException, IOException {
+  public void confirmShutdown() throws FaultException, IOException {
+    confirmShutdown = true;
+  }
+
+  public List<MessageCommand> poll() throws FaultException, IOException {
     pollCount++;
 
     return generateAck("POLL");
@@ -40,13 +49,13 @@ public class TestProtocol implements InteropProtocol {
     restart = true;
   }
 
-  public List sendStatus(Status stat) throws FaultException, IOException {
+  public List<MessageCommand> sendStatus(StatusMessageCommand stat) throws FaultException, IOException {
     statCount++;
 
     return generateAck("STATUS");
   }
 
-  public List pollAndSendStatus(Status stat) throws FaultException, IOException {
+  public List<MessageCommand> pollAndSendStatus(StatusMessageCommand stat) throws FaultException, IOException {
     pollCount++;
     statCount++;
 
@@ -57,11 +66,12 @@ public class TestProtocol implements InteropProtocol {
     this.log = log;
   }
   
-  private static List generateAck(String suffix) {
-    ArrayList list = new ArrayList(1);
+  private static List<MessageCommand> generateAck(String suffix) {
+    ArrayList<MessageCommand> list = new ArrayList<>(1);
     Ack ack = new Ack();
     ack.setCommandId(++counter + suffix);
     list.add(ack);
     return list;
   }
+  
 }

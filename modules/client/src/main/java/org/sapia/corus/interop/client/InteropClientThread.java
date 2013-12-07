@@ -3,16 +3,14 @@ package org.sapia.corus.interop.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.sapia.corus.interop.AbstractCommand;
-import org.sapia.corus.interop.Ack;
-import org.sapia.corus.interop.ConfigurationEvent;
-import org.sapia.corus.interop.ProcessEvent;
-import org.sapia.corus.interop.Shutdown;
-import org.sapia.corus.interop.Status;
 import org.sapia.corus.interop.api.Consts;
 import org.sapia.corus.interop.api.SystemConfigurationSynchronizer;
-import org.sapia.corus.interop.soap.FaultException;
-
+import org.sapia.corus.interop.api.message.AckMessageCommand;
+import org.sapia.corus.interop.api.message.ConfigurationEventMessageCommand;
+import org.sapia.corus.interop.api.message.MessageCommand;
+import org.sapia.corus.interop.api.message.ProcessEventMessageCommand;
+import org.sapia.corus.interop.api.message.ShutdownMessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
 
 /**
  * @author Yanick Duchesne
@@ -93,31 +91,31 @@ class InteropClientThread extends Thread {
       _parent._log.debug("Starting interop client thread");
 
     while (true) {
-	  try {
-	    if(_parent._log.isDebugEnabled())
-	      _parent._log.debug(String.format("Sleeping for %s...", _analysisInterval));
-	    
-		  Thread.sleep(_analysisInterval);
-	  } catch (InterruptedException e) {
-	    _parent._log.warn("Interop thread was interrupted");
-		  break;
-	  }      
+  	  try {
+  	    if(_parent._log.isDebugEnabled())
+  	      _parent._log.debug(String.format("Sleeping for %s...", _analysisInterval));
+  	    
+  		  Thread.sleep(_analysisInterval);
+  	  } catch (InterruptedException e) {
+  	    _parent._log.warn("Interop thread was interrupted");
+  		  break;
+  	  }      
 	  
   	  if(_parent._proto == null){
   	    _parent._log.info("Protocol not set on InteropClient; will not be polling Corus");
-  	  }
-  	  else {
+  	  } else {
         try {
-          if(_parent._log.isDebugEnabled())
+          if (_parent._log.isDebugEnabled())
             _parent._log.debug("Checking if polling is due...");
           
-          List<AbstractCommand> response = new ArrayList<AbstractCommand>();
-          Status status = null;
+          List<MessageCommand> response = new ArrayList<MessageCommand>();
+          StatusMessageCommand.Builder status = null;
           long currentTime = System.currentTimeMillis();
 
           if (_statusInterval > 0 && ((currentTime - _lastStatus) >= _statusInterval)) {
             _lastStatus = currentTime;
-            status = new Status();
+            status = _parent.getProtocol().getMessageBuilderFactory().newStatusMessageBuilder()
+                .commandId(CyclicIdGenerator.newCommandId());
             _parent.processStatus(status);
           }
           
@@ -131,23 +129,22 @@ class InteropClientThread extends Thread {
             } else {
               if(_parent._log.isDebugEnabled())
                 _parent._log.debug("Polling and sending status");
-              response = _parent._proto.pollAndSendStatus(status);
+              response = _parent._proto.pollAndSendStatus(status.build());
             }
           } else if (status != null) {
             if(_parent._log.isDebugEnabled())
               _parent._log.debug("Sending status");
-            response = _parent._proto.sendStatus(status);
+            response = _parent._proto.sendStatus(status.build());
           }
 
-          AbstractCommand command;
+          MessageCommand command;
 
           for (int i = 0; i < response.size(); i++) {
-            command = (AbstractCommand) response.get(i);
+            command = (MessageCommand) response.get(i);
             if(_parent._log.isDebugEnabled())
-              _parent._log.debug("Command received from corus server; command ID is: " +
-                                 command.getCommandId());
+              _parent._log.debug("Command received from corus server; command ID is: " + command.getCommandId());
 
-            if (command instanceof Ack) {
+            if (command instanceof AckMessageCommand) {
               if(_parent._log.isDebugEnabled())
                 _parent._log.debug("Command was an Ack - ignoring");
 
@@ -156,19 +153,19 @@ class InteropClientThread extends Thread {
               // Ack is not accompanied by other commands.
               break;
               
-            } else if (command instanceof Shutdown) {
-              Shutdown sh = (Shutdown) command;
+            } else if (command instanceof ShutdownMessageCommand) {
+              ShutdownMessageCommand sh = (ShutdownMessageCommand) command;
               _parent._log.info("Shutdown requested from: " + sh.getRequestor());
               _parent.shutdown();
               break;
               
-            } else if (command instanceof ProcessEvent) {
-              ProcessEvent event = (ProcessEvent) command;
+            } else if (command instanceof ProcessEventMessageCommand) {
+              ProcessEventMessageCommand event = (ProcessEventMessageCommand) command;
               _parent._log.debug("Process event received: " + event.getType());
               _parent.notifyProcessEventListeners(event);
               
-            } else if (command instanceof ConfigurationEvent) {
-              ConfigurationEvent event = (ConfigurationEvent) command;
+            } else if (command instanceof ConfigurationEventMessageCommand) {
+              ConfigurationEventMessageCommand event = (ConfigurationEventMessageCommand) command;
               _parent._log.debug("Configuration event received: " + event);
               _parent.notifyConfigurationChangeListeners(event);
             }

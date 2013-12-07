@@ -73,6 +73,11 @@ public interface Consts {
    */  
   public static final String CORUS_PROCESS_LOG_ROLLING = "corus.process.log.rolling";
   
+  /**
+   * Corresponds to the <code>corus.process.iop.protocol</code> property.
+   */  
+  public static final String CORUS_PROCESS_INTEROP_PROTOCOL = "corus.process.iop.protocol";
+  
   public static final String LOG_LEVEL_DEBUG  = "debug";
   
   public static final String LOG_LEVEL_INFO  = "info";

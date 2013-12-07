@@ -1,12 +1,12 @@
 package org.sapia.corus.interop.client;
 
-import junit.framework.TestCase;
-
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.sapia.corus.interop.ProcessEvent;
 import org.sapia.corus.interop.api.Consts;
 import org.sapia.corus.interop.api.ProcessEventListener;
+import org.sapia.corus.interop.soap.message.ProcessEvent;
+
+import junit.framework.TestCase;
 
 
 /**
@@ -24,6 +24,8 @@ public class InteropClientTest extends TestCase {
     System.setProperty(Consts.CORUS_POLL_INTERVAL, "1");
     System.setProperty(Consts.CORUS_STATUS_INTERVAL, "2");
     System.setProperty(Consts.CORUS_CLIENT_ANALYSIS_INTERVAL, "1");
+    System.setProperty(Consts.CORUS_PROCESS_LOG_LEVEL, "debug");
+
   }
 
   public InteropClientTest(String name) {

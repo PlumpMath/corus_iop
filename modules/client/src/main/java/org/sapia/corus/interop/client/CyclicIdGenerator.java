@@ -6,7 +6,7 @@ package org.sapia.corus.interop.client;
  * create numeric identifiers up to a value of 999999; then the internal
  * counter will be reset.
  *
- * @author <a href="mailto:jc@sapia-oss.org">Jean-Cedric Desrochers</a>
+ * @author jcdesrochers
  */
 public class CyclicIdGenerator {
 
