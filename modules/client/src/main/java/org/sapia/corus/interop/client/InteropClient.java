@@ -1,6 +1,7 @@
 package org.sapia.corus.interop.client;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.ref.SoftReference;
@@ -410,13 +411,24 @@ public class InteropClient implements Consts, Implementation {
       
       if(System.getProperty(CORUS_PROCESS_DIR) != null){
         File procDir = new File(System.getProperty(CORUS_PROCESS_DIR).replace("\"", ""));
-        PrintStream outStream = new PrintStreamLogOutputAdapter(new StdoutFileLogOutput(procDir)); 
-        outStream.println("Redirected stdout to this file");
-        PrintStream errStream = new PrintStreamLogOutputAdapter(new StderrFileLogOutput(procDir));
-        errStream.println("Redirected stderr to this file");
-        _log.debug("Creating stdout and stderr logs to --> " + procDir.getAbsolutePath()); 
-        System.setOut(outStream);
-        System.setErr(errStream);
+        if (System.getProperty(CORUS_PROCESS_LOG_ROLLING, "false").equalsIgnoreCase("true")) {
+          PrintStream outStream = new PrintStreamLogOutputAdapter(new StdoutFileLogOutput(procDir)); 
+          outStream.println("Redirected stdout");
+          PrintStream errStream = new PrintStreamLogOutputAdapter(new StderrFileLogOutput(procDir));
+          errStream.println("Redirected stderr");
+          _log.debug("Creating stdout and stderr logs in --> " + procDir.getAbsolutePath()); 
+          System.setOut(outStream);
+          System.setErr(errStream);
+        } else {
+          File errFile  = new File(procDir, "stderr.txt");
+          File outFile  = new File(procDir, "stdout.txt");
+          PrintStream errStream = new TimestampPrintStream(new FileOutputStream(errFile));
+          PrintStream outStream = new TimestampPrintStream(new FileOutputStream(outFile));  
+          _log.debug("stdout --> " + outFile.getAbsolutePath());        
+          _log.debug("stderr --> " + errFile.getAbsolutePath());        
+          System.setOut(outStream);
+          System.setErr(errStream);
+        }
         _log.info("starting interop client");
       }
       else{
