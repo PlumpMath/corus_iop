@@ -432,8 +432,7 @@ public class InteropClient implements Consts, Implementation {
         _log.info("starting interop client");
       }
       else{
-        _log.warn("System property not set: " + CORUS_PROCESS_DIR + 
-          "; not redirecting process output to file");
+        _log.warn("System property not set: " + CORUS_PROCESS_DIR + "; not redirecting process output to file");
       }
     }catch(Exception e){
       _log.warn("Could not redirect stdout and stderr to file", e);
