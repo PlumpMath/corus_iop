@@ -10,17 +10,17 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TimestampPrintStreamTest {
+public class TimestampPrintWriterTest {
 
   private ByteArrayOutputStream delegate;
-  private TimestampPrintStream  stream;
+  private TimestampPrintWriter stream;
 
   private DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
   @Before
   public void setUp() throws Exception {
     delegate = new ByteArrayOutputStream();
-    stream = new TimestampPrintStream(delegate);
+    stream = new TimestampPrintWriter(delegate);
   }
 
   @Test
