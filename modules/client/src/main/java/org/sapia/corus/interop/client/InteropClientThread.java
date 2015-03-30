@@ -5,15 +5,18 @@ import java.util.List;
 
 import org.sapia.corus.interop.AbstractCommand;
 import org.sapia.corus.interop.Ack;
+import org.sapia.corus.interop.ConfigurationEvent;
+import org.sapia.corus.interop.ProcessEvent;
 import org.sapia.corus.interop.Shutdown;
 import org.sapia.corus.interop.Status;
 import org.sapia.corus.interop.api.Consts;
+import org.sapia.corus.interop.api.SystemConfigurationSynchronizer;
 import org.sapia.corus.interop.soap.FaultException;
 
 
 /**
  * @author Yanick Duchesne
- * @author <a href="mailto:jc@sapia-oss.org">Jean-Cedric Desrochers</a>
+ * @author Jean-Cedric Desrochers
  */
 class InteropClientThread extends Thread {
 
@@ -23,6 +26,7 @@ class InteropClientThread extends Thread {
   private long          _lastStatus = System.currentTimeMillis();
   private long          _lastPoll = _lastStatus;
   private InteropClient _parent;
+  private SystemConfigurationSynchronizer systemConfigSynchronizer;
 
   /**
    * Creates a new InteropClientThread instance.
@@ -66,6 +70,17 @@ class InteropClientThread extends Thread {
     } catch (NullPointerException e) {
       _parent._log.warn("The client analysis interval is not set - setting default value to 1000");
       _analysisInterval = 1000;
+    }
+
+    try {
+      if (Boolean.parseBoolean(System.getProperty(Consts.CORUS_CLIENT_CONFIGURATION_SYNC_SYSTEM_PROPERTIES, "false"))) {
+        _parent._log.info("Activating synchronization of configuration with system properties...");
+        // Keeping hard reference here because the InteropClient only keeps a soft reference on the listener
+        systemConfigSynchronizer = new SystemConfigurationSynchronizer();
+        _parent.addConfigurationChangeListener(systemConfigSynchronizer);
+      }
+    } catch (RuntimeException re) {
+      _parent._log.warn("Unable to process the auto-synchornization of the system properties with the configuration events", re);
     }
   }
 
@@ -140,14 +155,24 @@ class InteropClientThread extends Thread {
               // according to the interop spec, an
               // Ack is not accompanied by other commands.
               break;
+              
             } else if (command instanceof Shutdown) {
               Shutdown sh = (Shutdown) command;
-              _parent._log.info("Shutdown requested from: " +
-                                sh.getRequestor());
+              _parent._log.info("Shutdown requested from: " + sh.getRequestor());
               _parent.shutdown();
-
               break;
+              
+            } else if (command instanceof ProcessEvent) {
+              ProcessEvent event = (ProcessEvent) command;
+              _parent._log.debug("Process event received: " + event.getType());
+              _parent.notifyProcessEventListeners(event);
+              
+            } else if (command instanceof ConfigurationEvent) {
+              ConfigurationEvent event = (ConfigurationEvent) command;
+              _parent._log.debug("Configuration event received: " + event);
+              _parent.notifyConfigurationChangeListeners(event);
             }
+            
           }
         } catch (FaultException e) {
           _parent._log.info("corus server generated a SOAP fault", e);
