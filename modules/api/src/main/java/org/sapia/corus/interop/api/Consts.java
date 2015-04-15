@@ -39,6 +39,11 @@ public interface Consts {
   public static final String CORUS_CLIENT_ANALYSIS_INTERVAL = "corus.client.analysis.interval";
 
   /**
+   * Corresponds to the <code>corus.client.configuration.synchronizeSystemProperties</code> property.
+   */
+  public static final String CORUS_CLIENT_CONFIGURATION_SYNC_SYSTEM_PROPERTIES = "corus.client.configuration.synchronizeSystemProperties";
+
+  /**
    * Corresponds to the <code>corus.distribution.dir</code> property.
    */
   public static final String CORUS_DIST_DIR = "corus.distribution.dir";

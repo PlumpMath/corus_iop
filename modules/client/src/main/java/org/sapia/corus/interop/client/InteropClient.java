@@ -9,10 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.sapia.corus.interop.ConfigurationEvent;
+import org.sapia.corus.interop.ProcessEvent;
 import org.sapia.corus.interop.Status;
+import org.sapia.corus.interop.api.ConfigurationChangeListener;
 import org.sapia.corus.interop.api.Consts;
 import org.sapia.corus.interop.api.Implementation;
 import org.sapia.corus.interop.api.InteropLink;
+import org.sapia.corus.interop.api.ProcessEventListener;
 import org.sapia.corus.interop.api.ShutdownListener;
 import org.sapia.corus.interop.api.StatusRequestListener;
 import org.sapia.corus.interop.soap.FaultException;
@@ -79,19 +83,21 @@ import org.sapia.corus.interop.soap.FaultException;
  * @author Yanick Duchesne
  */
 public class InteropClient implements Consts, Implementation {
+  
   public static final int UNDEFINED_PORT = -1;
   static InteropClient    _instance;
   InteropProtocol         _proto;
   boolean                 _dynamic = System.getProperty(Consts.CORUS_PID) != null;
-  List<SoftReference<ShutdownListener>>      _shutdownListeners    = new ArrayList<SoftReference<ShutdownListener>>();
-  List<SoftReference<StatusRequestListener>> _statusListeners      = new ArrayList<SoftReference<StatusRequestListener>>();
+  private List<SoftReference<ShutdownListener>>            _shutdownListeners = new ArrayList<SoftReference<ShutdownListener>>();
+  private List<SoftReference<StatusRequestListener>>       _statusListeners   = new ArrayList<SoftReference<StatusRequestListener>>();
+  private List<SoftReference<ProcessEventListener>>        _eventListeners    = new ArrayList<SoftReference<ProcessEventListener>>();
+  private List<SoftReference<ConfigurationChangeListener>> _configListeners   = new ArrayList<SoftReference<ConfigurationChangeListener>>();
   boolean                 _exitSystemOnShutdown = true;
   boolean                 _isShutdownInProgress = false;
   InteropClientThread     _thread;
   Log                     _log;
   ClientStatusListener    _listener;
   
-
   private InteropClient() {
     StdoutLog log = new StdoutLog();
     setLogLevel(log);
@@ -361,6 +367,26 @@ public class InteropClient implements Consts, Implementation {
   public synchronized void addStatusRequestListener(StatusRequestListener listener) {
     _statusListeners.add(new SoftReference<StatusRequestListener>(listener));
   }
+  
+  /**
+   * Adds a {@link ProcessEventListener} to this client. The listener is internally
+   * kept in a {@link SoftReference}, so client applications
+   * should keep a reference on the given listener in order to spare the
+   * latter from being GC'ed.
+   * 
+   * @param listener a {@link ProcessEventListener}. 
+   */
+  public synchronized void addProcessEventListener(ProcessEventListener listener) {
+    _eventListeners.add(new SoftReference<ProcessEventListener>(listener));
+  }
+
+  /* (non-Javadoc)
+   * @see org.sapia.corus.interop.api.Implementation#addConfigurationChangeListener(org.sapia.corus.interop.api.ConfigurationChangeListener)
+   */
+  @Override
+  public synchronized void addConfigurationChangeListener(ConfigurationChangeListener listener) {
+    _configListeners.add(new SoftReference<ConfigurationChangeListener>(listener));
+  }
 
   /**
    * Internally goes through this client's <code>StatusRequestListener</code>
@@ -379,11 +405,67 @@ public class InteropClient implements Consts, Implementation {
         _statusListeners.remove(i);
         i--;
       } else {
-        listener.onStatus(stat);
+        try {
+          listener.onStatus(stat);
+        } catch (RuntimeException re) {
+          _log.warn("System error while notifying status request listener (IGNORED)", re);
+        }
       }
     }
   }
-
+  
+  /**
+   * Internally goes through this client's {@link ProcessEventListener}s, passing
+   * to each the given {@link ProcessEvent}.
+   *
+   * @param event a {@link ProcessEvent}.
+   */
+  protected void notifyProcessEventListeners(ProcessEvent event) {
+    int i = 0;
+    while (i < _eventListeners.size()) {
+      SoftReference<ProcessEventListener> ref = _eventListeners.get(i);
+      ProcessEventListener listener = (ProcessEventListener) ref.get();
+      
+      if (listener == null) {
+        _eventListeners.remove(i);
+      } else {
+        try {
+          listener.onProcessEvent(event);
+        } catch (RuntimeException re) {
+          _log.warn("System error while notifying process event listener (IGNORED)", re);
+        } finally {
+          i++;
+        }
+      }
+    }
+  }
+  
+  /**
+   * Internally goes through this client's {@link ConfigurationChangeListener}s, passing
+   * to each the given {@link ConfigurationEvent}.
+   *
+   * @param event a {@link ConfigurationEvent}.
+   */
+  protected void notifyConfigurationChangeListeners(ConfigurationEvent event) {
+    int i = 0;
+    while (i < _configListeners.size()) {
+      SoftReference<ConfigurationChangeListener> ref = _configListeners.get(i);
+      ConfigurationChangeListener listener = (ConfigurationChangeListener) ref.get();
+      
+      if (listener == null) {
+        _eventListeners.remove(i);
+      } else {
+        try {
+          listener.onConfigurationChange(event);
+        } catch (RuntimeException re) {
+          _log.warn("System error while notifying configuration change listener (IGNORED)", re);
+        } finally {
+          i++;
+        }
+      }
+    }
+  }
+ 
   /**
    * THIS METHOD IS PROVIDED FOR TESTING PURPOSES ONLY.
    *

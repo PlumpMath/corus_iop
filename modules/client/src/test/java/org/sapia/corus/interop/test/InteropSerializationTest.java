@@ -1,15 +1,16 @@
 package org.sapia.corus.interop.test;
 
 import junit.framework.TestCase;
-
 import junit.textui.TestRunner;
 
 import org.sapia.corus.interop.Ack;
+import org.sapia.corus.interop.ConfigurationEvent;
 import org.sapia.corus.interop.ConfirmShutdown;
 import org.sapia.corus.interop.InteropProcessor;
 import org.sapia.corus.interop.Param;
 import org.sapia.corus.interop.Poll;
 import org.sapia.corus.interop.Process;
+import org.sapia.corus.interop.ProcessEvent;
 import org.sapia.corus.interop.Restart;
 import org.sapia.corus.interop.Server;
 import org.sapia.corus.interop.Shutdown;
@@ -217,6 +218,65 @@ public class InteropSerializationTest extends TestCase {
             " requestor=\"InteropSerializationTest\"" +
             " commandId=\"1234\" />";
 
+    assertResponse(aSoapBody, aResult);
+  }
+  
+  public void testProcessEventResponse() throws Exception {
+    ProcessEvent event = new ProcessEvent();
+    event.setCommandId("1234");
+    event.setType("InteropSerializationTest");
+    Param p1 = new Param("name1", "val1");
+    event.addParam(p1);
+    Param p2 = new Param("name2", "val2");
+    event.addParam(p2);
+
+    // Create the SOAP envelope
+    Envelope anEnveloppe = createSoapResponse();
+    anEnveloppe.getBody().addObject(event);
+
+    // Serialize the envelope with the idefix processor
+    ByteArrayOutputStream anOutput = new ByteArrayOutputStream();
+    _theProcessor.serialize(anEnveloppe, anOutput);
+
+    String aResult = anOutput.toString("UTF-8");
+
+    String aSoapBody =
+        "<CORUS-IOP:ProcessEvent xmlns:CORUS-IOP=\"http://schemas.sapia-oss.org/corus/interoperability/\"" +
+        " type=\"InteropSerializationTest\"" +
+        " commandId=\"1234\">" + 
+        "<CORUS-IOP:Param name=\"name1\" value=\"val1\" />" + 
+        "<CORUS-IOP:Param name=\"name2\" value=\"val2\" />" + 
+        "</CORUS-IOP:ProcessEvent>";
+    
+    assertResponse(aSoapBody, aResult);
+  }
+  
+  public void testConfigurationEvent() throws Exception {
+    ConfigurationEvent event = ConfigurationEvent.builder()
+        .type(ConfigurationEvent.TYPE_UPDATE)
+        .commandId("84304880")
+        .param("sna", "foo")
+        .param("foo2", "dew")
+        .build();
+    
+    // Create the SOAP envelope
+    Envelope anEnveloppe = createSoapResponse();
+    anEnveloppe.getBody().addObject(event);
+
+    // Serialize the envelope with the idefix processor
+    ByteArrayOutputStream anOutput = new ByteArrayOutputStream();
+    _theProcessor.serialize(anEnveloppe, anOutput);
+
+    String aResult = anOutput.toString("UTF-8");
+
+    String aSoapBody =
+        "<CORUS-IOP:ConfigurationEvent xmlns:CORUS-IOP=\"http://schemas.sapia-oss.org/corus/interoperability/\"" +
+        " type=\"update\"" +
+        " commandId=\"84304880\">" + 
+        "<CORUS-IOP:Param name=\"sna\" value=\"foo\" />" + 
+        "<CORUS-IOP:Param name=\"foo2\" value=\"dew\" />" + 
+        "</CORUS-IOP:ConfigurationEvent>";
+    
     assertResponse(aSoapBody, aResult);
   }
 

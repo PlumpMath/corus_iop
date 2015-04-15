@@ -2,7 +2,11 @@ package org.sapia.corus.interop.client;
 
 import junit.framework.TestCase;
 
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.sapia.corus.interop.ProcessEvent;
 import org.sapia.corus.interop.api.Consts;
+import org.sapia.corus.interop.api.ProcessEventListener;
 
 
 /**
@@ -49,5 +53,20 @@ public class InteropClientTest extends TestCase {
     cli.addShutdownListener(listener);
     cli.shutdown();
     super.assertTrue("Shutdown listener was not called", listener.called);
+  }
+  
+  public void testProcessEvent() throws Exception {
+    ProcessEventListener listener = Mockito.mock(ProcessEventListener.class);
+    InteropClient        cli   = InteropClient.getInstance();
+    TestProtocol         proto = new TestProtocol();
+    cli._proto = null;
+    cli.setProtocol(proto);
+    cli._exitSystemOnShutdown = false;
+    cli.addProcessEventListener(listener);
+
+    ProcessEvent evt = new ProcessEvent();
+    cli.notifyProcessEventListeners(evt);
+    
+    Mockito.verify(listener).onProcessEvent(Matchers.eq(evt));
   }
 }
