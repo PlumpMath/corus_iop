@@ -159,7 +159,7 @@ public class BaseFileLogOutput implements StdLogOutput {
 
   protected FileWriter createFileWriter(File target) {
     try {
-      PrintWriter stream = new TimestampPrintWriter(new FileOutputStream(target));
+      PrintWriter stream = new TimestampPrintWriter(new FileOutputStream(target, true));
       return new StreamFileWriter(stream);
     } catch (FileNotFoundException e) {
       System.out.println("Could not create log file, will log to DEV/NULL");

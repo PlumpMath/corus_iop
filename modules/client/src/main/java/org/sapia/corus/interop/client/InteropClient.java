@@ -504,8 +504,8 @@ public class InteropClient implements Consts, Implementation {
         } else {
           File errFile  = new File(procDir, "stderr.txt");
           File outFile  = new File(procDir, "stdout.txt");
-          PrintStream errStream = new TimestampPrintStream(new FileOutputStream(errFile));
-          PrintStream outStream = new TimestampPrintStream(new FileOutputStream(outFile));  
+          PrintStream errStream = new TimestampPrintStream(new FileOutputStream(errFile, true));
+          PrintStream outStream = new TimestampPrintStream(new FileOutputStream(outFile, true));  
           _log.debug("stdout --> " + outFile.getAbsolutePath());        
           _log.debug("stderr --> " + errFile.getAbsolutePath());        
           System.setOut(outStream);
