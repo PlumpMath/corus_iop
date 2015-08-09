@@ -1,6 +1,7 @@
 package org.sapia.corus.interop.client;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -8,6 +9,7 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.sapia.corus.interop.ConfigurationEvent;
 import org.sapia.corus.interop.ProcessEvent;
@@ -104,14 +106,56 @@ public class InteropClient implements Consts, Implementation {
     _log = log;
     _log.debug("isDynamic: " + _dynamic);
     _log.debug("CORUS_PROCESS_DIR: " + System.getProperty(CORUS_PROCESS_DIR));
+
+    String processDirName = System.getProperty(CORUS_PROCESS_DIR);
+    if (processDirName != null) {
+      if (processDirName.charAt(0) == '"') {
+        processDirName = processDirName.substring(1, (processDirName.length() - 1));
+        System.setProperty(CORUS_PROCESS_DIR, processDirName);
+        _log.debug("Renamed CORUS_PROCESS_DIR to : " + processDirName);
+      }
+      
+      File processDir = new File(processDirName);
+      if (processDir.exists()) {
+        Properties props = new Properties();
+        File hiddenProcessPropertiesFile = new File(processDir, ".corus-process.hidden.properties");
+        if (hiddenProcessPropertiesFile.exists()) {
+          FileInputStream fis = null; 
+          try {
+            fis = new FileInputStream(hiddenProcessPropertiesFile);
+            _log.debug("Loading properties in " + hiddenProcessPropertiesFile.getAbsolutePath() + " to System properties");
+            props.load(fis);
+            for (String n : props.stringPropertyNames()) {
+              String v = props.getProperty(n);
+              if (v != null) {
+                System.setProperty(n, v);
+              }
+            } 
+          } catch (IOException e) {
+            _log.warn("Could not load: " + hiddenProcessPropertiesFile.getAbsolutePath(), e);
+          } finally {
+            if (fis != null) {
+              try {
+                fis.close();
+              } catch (Exception e2) {
+                // noop
+              }
+            }
+          }
+        } else {
+          _log.debug("Hidden process properties file does not exist: " + hiddenProcessPropertiesFile.getAbsolutePath());
+        }
+        
+      } else {
+        _log.debug("Process directory does not exist" + CORUS_PROCESS_DIR);
+      }
+      
+    } else {
+      _log.debug("No value found for system property: " +  CORUS_PROCESS_DIR);
+    }
+
     if (_dynamic) {
       // Process the process directory
-      String processDir = System.getProperty(CORUS_PROCESS_DIR);
-      if (processDir != null && processDir.charAt(0) == '"') {
-        processDir = processDir.substring(1, (processDir.length() - 1));
-        System.setProperty(CORUS_PROCESS_DIR, processDir);
-        _log.debug("Renamed CORUS_PROCESS_DIR to : " + processDir);
-      }
       _statusListeners.add(new SoftReference<StatusRequestListener>(_listener = new ClientStatusListener()));
       redirectOutput();
       _log.debug("Starting interop client thread...");
@@ -122,7 +166,7 @@ public class InteropClient implements Consts, Implementation {
     } else {
       _log.warn("No corus process ID found; VM was not started dynamically");
     }
-    
+     
     Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
             _exitSystemOnShutdown = false;
