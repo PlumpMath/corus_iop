@@ -1,11 +1,11 @@
 package org.sapia.corus.interop.api;
 
-import org.sapia.corus.interop.ConfigurationEvent;
-import org.sapia.corus.interop.Param;
+import org.sapia.corus.interop.api.message.ConfigurationEventMessageCommand;
+import org.sapia.corus.interop.api.message.ParamMessagePart;
 
 /**
  * Utility class that provides an easy to automatically synchornize the configuration changes published
- * through {@link ConfigurationEvent}s with the system properties of the current JVM.
+ * through {@link ConfigurationEventSoapMessage}s with the system properties of the current JVM.
  * 
  * @author jcdesrochers
  */
@@ -15,10 +15,10 @@ public class SystemConfigurationSynchronizer implements ConfigurationChangeListe
    * @see org.sapia.corus.interop.api.ConfigurationChangeListener#onConfigurationChange(org.sapia.corus.interop.ConfigurationEvent)
    */
   @Override
-  public void onConfigurationChange(ConfigurationEvent event) {
-    if (ConfigurationEvent.TYPE_UPDATE.equals(event.getType())) {
+  public void onConfigurationChange(ConfigurationEventMessageCommand event) {
+    if (ConfigurationEventMessageCommand.TYPE_UPDATE.equals(event.getType())) {
       performConfigUpdate(event.getParams());
-    } else if (ConfigurationEvent.TYPE_DELETE.equals(event.getType())) {
+    } else if (ConfigurationEventMessageCommand.TYPE_DELETE.equals(event.getType())) {
       performConfigDelete(event.getParams());
     }
   }
@@ -26,10 +26,10 @@ public class SystemConfigurationSynchronizer implements ConfigurationChangeListe
   /**
    * Internal method that performs system property updates with the passed in configuration.
    *  
-   * @param params The {@link Param} to update.
+   * @param params The {@link SoapParam} to update.
    */
-  protected void performConfigUpdate(Iterable<Param> params) {
-    for (Param param: params) {
+  protected void performConfigUpdate(Iterable<ParamMessagePart> params) {
+    for (ParamMessagePart param: params) {
       if (param.getName() != null) {
         System.setProperty(param.getName(), param.getValue());
       }
@@ -39,10 +39,10 @@ public class SystemConfigurationSynchronizer implements ConfigurationChangeListe
   /**
    * Internal method that performs system property deletion of the passed in configuration.
    *  
-   * @param params The {@link Param} to delete.
+   * @param params The {@link SoapParam} to delete.
    */
-  protected void performConfigDelete(Iterable<Param> params) {
-    for (Param param: params) {
+  protected void performConfigDelete(Iterable<ParamMessagePart> params) {
+    for (ParamMessagePart param: params) {
       if (param.getName() != null) {
         System.clearProperty(param.getName());
       }

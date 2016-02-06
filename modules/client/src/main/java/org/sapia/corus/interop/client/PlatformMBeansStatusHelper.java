@@ -11,12 +11,11 @@ import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 
-import org.sapia.corus.interop.Context;
-import org.sapia.corus.interop.Param;
+import org.sapia.corus.interop.api.message.ContextMessagePart;
 
 public class PlatformMBeansStatusHelper{
   
-  public static void process(Context ctx){
+  public static void process(ContextMessagePart.Builder ctx){
     
     /////// RUNTIME
 
@@ -103,11 +102,8 @@ public class PlatformMBeansStatusHelper{
 
   }
   
-  private static void param(String name, Object value, Context ctx){
-    Param p = new Param();
-    p.setName(name);
-    p.setValue(value.toString());
-    ctx.addParam(p);
+  private static void param(String name, Object value, ContextMessagePart.Builder ctx){
+    ctx.param(name, value.toString());
   }
   
   private static Object getLongTotal(List<GarbageCollectorMXBean> gcs, String getter) throws Exception{

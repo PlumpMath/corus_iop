@@ -11,9 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.sapia.corus.interop.ConfigurationEvent;
-import org.sapia.corus.interop.ProcessEvent;
-import org.sapia.corus.interop.Status;
 import org.sapia.corus.interop.api.ConfigurationChangeListener;
 import org.sapia.corus.interop.api.Consts;
 import org.sapia.corus.interop.api.Implementation;
@@ -21,7 +18,11 @@ import org.sapia.corus.interop.api.InteropLink;
 import org.sapia.corus.interop.api.ProcessEventListener;
 import org.sapia.corus.interop.api.ShutdownListener;
 import org.sapia.corus.interop.api.StatusRequestListener;
-import org.sapia.corus.interop.soap.FaultException;
+import org.sapia.corus.interop.api.message.ConfigurationEventMessageCommand;
+import org.sapia.corus.interop.api.message.ProcessEventMessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
+import org.sapia.corus.interop.soap.message.ConfigurationEvent;
+import org.sapia.corus.interop.soap.message.ProcessEvent;
 
 
 /**
@@ -76,13 +77,10 @@ import org.sapia.corus.interop.soap.FaultException;
  * <b>IMPORTANT</b>: it is important that corus-aware applications terminate using the above approach -
  * and not <code>System.exit()</code>. This is to avoid an auto-restart by the corus server, that will then
  * not know about the VM's shutdown.
- *s   
  * </p>
  * 
  *
- * @see org.sapia.corus.interop.http.HttpProtocol
- *
- * @author Yanick Duchesne
+ * @author yduchesne
  */
 public class InteropClient implements Consts, Implementation {
   
@@ -183,6 +181,13 @@ public class InteropClient implements Consts, Implementation {
   }
   
   /**
+   * @return the {@link InteropProtocol} used by this instance.
+   */
+  public InteropProtocol getProtocol() {
+    return _proto;
+  }
+  
+  /**
    * Returns the <code>InteropClient</code> singleton.
    *
    * @return an <code>InteropClient</code>
@@ -201,7 +206,7 @@ public class InteropClient implements Consts, Implementation {
    * The passed in protocol instance is given the <code>Log</code> of this
    * client.
    *
-   * @param proto a <code>InteropProtocol</code> implementation.
+   * @param proto a {@link InteropProtocol} implementation.
    * @throws ProtocolAlreadySetException if this instance's {@link InteropProtocol} has
    * already been set.
    */
@@ -438,7 +443,7 @@ public class InteropClient implements Consts, Implementation {
    *
    * @param stat a <code>Status</code> instance.
    */
-  public void processStatus(Status stat) {
+  public void processStatus(StatusMessageCommand.Builder stat) {
     StatusRequestListener listener;
 
     for (int i = 0; i < _statusListeners.size(); i++) {
@@ -450,7 +455,7 @@ public class InteropClient implements Consts, Implementation {
         i--;
       } else {
         try {
-          listener.onStatus(stat);
+          listener.onStatus(stat, _proto.getMessageBuilderFactory());
         } catch (RuntimeException re) {
           _log.warn("System error while notifying status request listener (IGNORED)", re);
         }
@@ -464,7 +469,7 @@ public class InteropClient implements Consts, Implementation {
    *
    * @param event a {@link ProcessEvent}.
    */
-  protected void notifyProcessEventListeners(ProcessEvent event) {
+  protected void notifyProcessEventListeners(ProcessEventMessageCommand event) {
     int i = 0;
     while (i < _eventListeners.size()) {
       SoftReference<ProcessEventListener> ref = _eventListeners.get(i);
@@ -490,7 +495,7 @@ public class InteropClient implements Consts, Implementation {
    *
    * @param event a {@link ConfigurationEvent}.
    */
-  protected void notifyConfigurationChangeListeners(ConfigurationEvent event) {
+  protected void notifyConfigurationChangeListeners(ConfigurationEventMessageCommand event) {
     int i = 0;
     while (i < _configListeners.size()) {
       SoftReference<ConfigurationChangeListener> ref = _configListeners.get(i);
@@ -509,7 +514,7 @@ public class InteropClient implements Consts, Implementation {
       }
     }
   }
- 
+
   /**
    * THIS METHOD IS PROVIDED FOR TESTING PURPOSES ONLY.
    *

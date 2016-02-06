@@ -8,13 +8,9 @@ import java.io.OutputStream;
 
 
 /**
+ * Implements an in-memory {@link StreamConnection}. 
+ * 
  * @author Yanick Duchesne
- *
- * <dl>
- * <dt><b>Copyright:</b><dd>Copyright &#169; 2002-2003 <a href="http://www.sapia-oss.org">Sapia Open Source Software</a>. All Rights Reserved.</dd></dt>
- * <dt><b>License:</b><dd>Read the license.txt file of the jar or visit the
- *        <a href="http://www.sapia-oss.org/license.html">license page</a> at the Sapia OSS web site</dd></dt>
- * </dl>
  */
 class MockStreamConnection implements StreamConnection {
   ByteArrayOutputStream _response;
@@ -43,17 +39,21 @@ class MockStreamConnection implements StreamConnection {
   }
 
   static final class MockOutputStream extends ByteArrayOutputStream {
-    MockStreamConnection _owner;
+   
+    private MockStreamConnection _owner;
+    private boolean              _closed;
 
     MockOutputStream(MockStreamConnection owner) {
       _owner = owner;
     }
 
     public void close() throws IOException {
-      super.close();
-      _owner._response = new ByteArrayOutputStream();
-      _owner._listener.onRequest(new ByteArrayInputStream(toByteArray()),
-                                 _owner._response);
+      if (!_closed) {
+        super.close();
+        _owner._response = new ByteArrayOutputStream();
+        _owner._listener.onRequest(new ByteArrayInputStream(toByteArray()), _owner._response);
+        _closed = true;
+      }
     }
   }
 }

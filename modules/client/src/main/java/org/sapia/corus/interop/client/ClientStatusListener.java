@@ -1,9 +1,9 @@
 package org.sapia.corus.interop.client;
 
-import org.sapia.corus.interop.Context;
-import org.sapia.corus.interop.Status;
-import org.sapia.corus.interop.Param;
 import org.sapia.corus.interop.api.StatusRequestListener;
+import org.sapia.corus.interop.api.message.ContextMessagePart;
+import org.sapia.corus.interop.api.message.InteropMessageBuilderFactory;
+import org.sapia.corus.interop.api.message.StatusMessageCommand.Builder;
 
 /**
  * @author Yanick Duchesne
@@ -26,34 +26,20 @@ public class ClientStatusListener implements StatusRequestListener{
     }
   }
  
+  @Override
+  public void onStatus(Builder statusBuilder, InteropMessageBuilderFactory factory) {
+    ContextMessagePart.Builder c = factory.newContextBuilder();
+      
+    c.name(CORUS_PROCESS_STATUS);
+    
+    c.param(MAX_MEMORY, Long.toString(Runtime.getRuntime().maxMemory()));
+    c.param(TOTAL_MEMORY, Long.toString(Runtime.getRuntime().totalMemory()));
+    c.param(FREE_MEMORY, Long.toString(Runtime.getRuntime().freeMemory()));
   
-  /**
-   * @see org.sapia.corus.interop.client.StatusRequestListener#onStatus(org.sapia.corus.interop.Status)
-   */
-  public void onStatus(Status status) {
-    Context t = new Context();
-    t.setName(CORUS_PROCESS_STATUS);
-    
-    Param maxMem = new Param();
-    maxMem.setName(MAX_MEMORY);
-    maxMem.setValue(Long.toString(Runtime.getRuntime().maxMemory()));
-    
-    Param totalMem = new Param();
-    totalMem.setName(TOTAL_MEMORY);
-    totalMem.setValue(Long.toString(Runtime.getRuntime().totalMemory()));
-    
-    Param freeMem = new Param();
-    freeMem.setName(FREE_MEMORY);
-    freeMem.setValue(Long.toString(Runtime.getRuntime().freeMemory()));
-    
-    
-    t.addParam(maxMem);
-    t.addParam(freeMem);
-    t.addParam(totalMem);
     if(isPlatformMBeansSupported){
-      PlatformMBeansStatusHelper.process(t);
+      PlatformMBeansStatusHelper.process(c);
     }
-    status.addContext(t);
+    statusBuilder.context(c.build());
   }
 
 }

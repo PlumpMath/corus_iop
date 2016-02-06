@@ -1,12 +1,11 @@
 package org.sapia.corus.interop.client;
 
-import org.sapia.corus.interop.AbstractCommand;
-import org.sapia.corus.interop.Status;
-import org.sapia.corus.interop.soap.FaultException;
-
 import java.io.IOException;
-
 import java.util.List;
+
+import org.sapia.corus.interop.api.message.InteropMessageBuilderFactory;
+import org.sapia.corus.interop.api.message.MessageCommand;
+import org.sapia.corus.interop.api.message.StatusMessageCommand;
 
 
 /**
@@ -14,8 +13,21 @@ import java.util.List;
  * communication between a dynamic VM and its corus server.
  *
  * @author Yanick Duchesne
+ * @author Jean-Cedric Desrochers
+ *
+ * <dl>
+ * <dt><b>Copyright:</b><dd>Copyright &#169; 2002-2003 <a href="http://www.sapia-oss.org">Sapia Open Source Software</a>. All Rights Reserved.</dd></dt>
+ * <dt><b>License:</b><dd>Read the license.txt file of the jar or visit the
+ *        <a href="http://www.sapia-oss.org/license.html">license page</a> at the Sapia OSS web site</dd></dt>
+ * </dl>
  */
 public interface InteropProtocol {
+  
+  /**
+   * @return the {@link InteropMessageBuilderFactory} to use for building Interop messages.
+   */
+  public InteropMessageBuilderFactory getMessageBuilderFactory();
+  
   /**
    * Sets this instance's <code>Log</code>.
    *
@@ -26,51 +38,52 @@ public interface InteropProtocol {
   /**
    * Polls the corus server to which this instance connects.
    *
-   * @return a <code>List<code> of commands returned by the corus server.
-   * @throws FaultException if the corus server a generated a SOAP fault.
+   * @return A {@link List} of {@link MessageCommand}s returned by the Corus server.
+   * @throws FaultException if the Corus server a generated a SOAP fault.
    * @throws IOException if a problem occurs while internally sending the request to
-   * the corus server.
+   * the Corus server.
    */
-  public List<AbstractCommand> poll() throws FaultException, IOException;
+  public List<MessageCommand> poll() throws FaultException, IOException;
 
   /**
    * Sends the given status to the corus server to which this instance connects.
    *
-   * @param stat A <code>Status</code> object.
-   * @return A <code>List<code> of commands returned by the corus server.
-   * @throws FaultException if the corus server a generated a SOAP fault.
+   * @param stat A {@link StatusMessageCommand} object.
+   * @return A {@link List} of {@link MessageCommand}s returned by the Corus server.
+   * @throws FaultException if the Corus server a generated a SOAP fault.
    * @throws IOException if a problem occurs while internally sending the request to
-   * the corus server.
+   * the Corus server.
    */
-  public List<AbstractCommand> sendStatus(Status stat) throws FaultException, IOException;
+  public List<MessageCommand> sendStatus(StatusMessageCommand stat) throws FaultException, IOException;
 
   /**
    * Polls the corus server and sends the given status to the corus
    * server to which this instance connects.
    *
-   * @param stat A <code>Status</code> object.
-   * @return A <code>List<code> of commands returned by the corus server.
-   * @throws FaultException if the corus server a generated a SOAP fault.
+   * @param stat A {@link StatusMessageCommand} object.
+   * @return A {@link List} of {@link MessageCommand}s returned by the Corus server.
+   * @throws FaultException if the Corus server a generated a SOAP fault.
    * @throws IOException if a problem occurs while internally sending the request to
-   * the corus server.
+   * the Corus server.
    */
-  public List<AbstractCommand> pollAndSendStatus(Status stat) throws FaultException, IOException;
+  public List<MessageCommand> pollAndSendStatus(StatusMessageCommand stat) throws FaultException, IOException;
 
   /**
-   * Sends a restart request to the corus server.
+   * Sends a restart request to the Corus server.
    *
-   * @throws FaultException if the corus server a generated a SOAP fault.
+   * @throws FaultException if the Corus server a generated a SOAP fault.
    * @throws IOException if a problem occurs while internally sending the request to
-   * the corus server.
+   * the Corus server.
    */
   public void restart() throws FaultException, IOException;
 
   /**
-   * Sends a shutdown confirmation to the corus server.
+   * Sends a shutdown confirmation to the Corus server.
    *
-   * @throws FaultException if the corus server a generated a SOAP fault.
+   * @throws FaultException if the Corus server a generated a SOAP fault.
    * @throws IOException if a problem occurs while internally sending the request to
-   * the corus server.
+   * the Corus server.
    */
   public void confirmShutdown() throws FaultException, IOException;
+  
 }

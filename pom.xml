@@ -3,9 +3,9 @@
   <name>Sapia Corus Interop parent POM</name>
   <description>The Java implementation of the Corus interop protocol</description>
   <url>http://www.sapia-oss.org/projects/corus/index.html</url>
-  
+
   <artifactId>sapia_corus_interop_parent</artifactId>
-  <version>2.8.2</version>
+  <version>3.0</version>
 
   <parent>
     <groupId>org.sapia</groupId>
@@ -18,8 +18,31 @@
     <developerConnection>scm:git:git@github.com:sapia-oss/corus_iop.git</developerConnection>
     <url>https://github.com/sapia-oss/corus_iop</url>
   </scm>
- 
+
   <packaging>pom</packaging>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>dtrott</id>
+      <url>http://maven.davidtrott.com/repository</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.sapia</groupId>
+        <artifactId>sapia_utils</artifactId>
+        <version>2.3</version>
+      </dependency>
+
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.8</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <directory>target</directory>
@@ -44,6 +67,6 @@
   <modules>
     <module>modules/api</module>
     <module>modules/client</module>
-  </modules>  
+  </modules>
 
 </project>

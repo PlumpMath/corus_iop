@@ -1,14 +1,14 @@
 package org.sapia.corus.interop.soap;
 
 
-// Import of Sapia's utility classes
-// ---------------------------------
-import org.sapia.util.xml.confix.ObjectHandlerIF;
-
 // Import of Sun's JDK classes
 // ---------------------------
 import java.util.ArrayList;
 import java.util.List;
+
+// Import of Sapia's utility classes
+// ---------------------------------
+import org.sapia.util.xml.confix.ObjectHandlerIF;
 
 
 /**
@@ -29,7 +29,7 @@ public class Body implements ObjectHandlerIF {
   /////////////////////////////////////////////////////////////////////////////////////////
 
   /** The objects contained in this body. */
-  private List _theObjects;
+  private List<Object> _theObjects;
 
   /////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////  CONSTRUCTORS  /////////////////////////////////////
@@ -39,13 +39,13 @@ public class Body implements ObjectHandlerIF {
    * Creates a new Body instance.
    */
   public Body() {
-    _theObjects = new ArrayList();
+    _theObjects = new ArrayList<Object>();
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////  ACCESSOR METHODS  ///////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////
-  public List getObjects() {
+  public List<Object> getObjects() {
     return _theObjects;
   }
 
